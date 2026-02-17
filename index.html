@@ -1,61 +1,147 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>MP4 Downloader</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            text-align: center;
-            padding: 30px;
-            background-color: #f2f2f7;
-        }
-        h2 {
-            margin-bottom: 25px;
-        }
-        input {
-            width: 95%;
-            max-width: 500px;
-            padding: 14px;
-            font-size: 16px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            margin-bottom: 20px;
-        }
-        button {
-            padding: 14px 24px;
-            font-size: 16px;
-            border-radius: 12px;
-            border: none;
-            background-color: #007aff;
-            color: white;
-        }
-        button:active {
-            opacity: 0.8;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>MP4 Loader + Downloader</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 24px;
+      background: #f2f2f7;
+      text-align: center;
+    }
+    h2 { margin: 8px 0 18px; }
+    input {
+      width: 95%;
+      max-width: 560px;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 12px;
+      border: 1px solid #c7c7cc;
+      background: white;
+      margin-bottom: 14px;
+    }
+    .row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    button {
+      padding: 14px 18px;
+      font-size: 16px;
+      border-radius: 12px;
+      border: none;
+      background: #007aff;
+      color: white;
+    }
+    button:active { opacity: 0.85; }
+    .secondary { background: #34c759; }
+    .status {
+      max-width: 560px;
+      margin: 10px auto 16px;
+      font-size: 14px;
+      color: #3a3a3c;
+      text-align: left;
+      background: white;
+      border: 1px solid #e5e5ea;
+      border-radius: 12px;
+      padding: 12px;
+      white-space: pre-wrap;
+    }
+    video {
+      width: 95%;
+      max-width: 560px;
+      border-radius: 12px;
+      background: black;
+    }
+  </style>
 </head>
 <body>
+  <h2>MP4 Loader + Downloader</h2>
 
-    <h2>MP4 Downloader</h2>
+  <input id="videoUrl" type="text" placeholder="Paste a direct .mp4 URL here" inputmode="url" />
 
-    <input type="text" id="videoUrl" placeholder="Paste direct .mp4 URL here">
+  <div class="row">
+    <button class="secondary" onclick="loadVideo()">Load video</button>
+    <button onclick="downloadVideo()">Download video</button>
+  </div>
 
-    <br>
+  <div id="status" class="status">Status: Ready.</div>
 
-    <button onclick="downloadVideo()">Download MP4</button>
+  <video id="player" controls playsinline style="display:none;"></video>
 
-    <script>
-  function downloadVideo() {
-    const url = document.getElementById("videoUrl").value.trim();
-    if (!url) return alert("Paste a direct .mp4 URL.");
+  <script>
+    function setStatus(msg) {
+      document.getElementById("status").textContent = "Status: " + msg;
+    }
 
-    // Open the mp4 in a new tab so iOS shows the native player + share sheet
-    window.open(url, "_blank");
-    alert("In the video tab: tap Share → Save Video (or Save to Files if available).");
-  }
-</script>
+    function getUrl() {
+      const url = document.getElementById("videoUrl").value.trim();
+      if (!url) {
+        alert("Paste a direct .mp4 URL first.");
+        return null;
+      }
+      return url;
+    }
 
+    function loadVideo() {
+      const url = getUrl();
+      if (!url) return;
+
+      const player = document.getElementById("player");
+      player.style.display = "block";
+      player.src = url;
+      player.load();
+
+      setStatus("Loaded into the player. If it doesn't play, the link may not be a direct MP4 or may require permission.");
+    }
+
+    function filenameFromUrl(url) {
+      try {
+        const u = new URL(url);
+        const base = u.pathname.split("/").pop() || "video.mp4";
+        return base.toLowerCase().endsWith(".mp4") ? base : (base + ".mp4");
+      } catch {
+        return "video.mp4";
+      }
+    }
+
+    async function downloadVideo() {
+      const url = getUrl();
+      if (!url) return;
+
+      setStatus("Trying to download…");
+
+      // Attempt 1: fetch as blob (best for "real" download, but often blocked by CORS/auth on iOS)
+      try {
+        const res = await fetch(url, { mode: "cors", credentials: "omit" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+
+        const blob = await res.blob();
+        if (!blob || blob.size === 0) throw new Error("Empty file");
+
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = filenameFromUrl(url);
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+
+        setStatus("Download started (blob). If iOS prompts, choose Save to Files.");
+        return;
+      } catch (e) {
+        // Attempt 2: fallback — open in new tab so you can Share → Save Video / Save to Files
+        setStatus(
+          "Direct download was blocked (common on iOS/CORS/protected links). " +
+          "Opening video in a new tab instead. Use Share → Save Video / Save to Files."
+        );
+        window.open(url, "_blank");
+      }
+    }
+  </script>
 </body>
 </html>
