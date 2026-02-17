@@ -47,27 +47,15 @@
     <button onclick="downloadVideo()">Download MP4</button>
 
     <script>
-        function downloadVideo() {
-            const url = document.getElementById("videoUrl").value.trim();
+  function downloadVideo() {
+    const url = document.getElementById("videoUrl").value.trim();
+    if (!url) return alert("Paste a direct .mp4 URL.");
 
-            if (!url) {
-                alert("Please enter a valid MP4 URL.");
-                return;
-            }
-
-            if (!url.toLowerCase().endsWith(".mp4")) {
-                alert("URL must end with .mp4");
-                return;
-            }
-
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = "";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-    </script>
+    // Open the mp4 in a new tab so iOS shows the native player + share sheet
+    window.open(url, "_blank");
+    alert("In the video tab: tap Share → Save Video (or Save to Files if available).");
+  }
+</script>
 
 </body>
 </html>
