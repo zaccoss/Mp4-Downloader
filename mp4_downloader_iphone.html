@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MP4 Downloader</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            text-align: center;
+            padding: 30px;
+            background-color: #f2f2f7;
+        }
+        h2 {
+            margin-bottom: 25px;
+        }
+        input {
+            width: 95%;
+            max-width: 500px;
+            padding: 14px;
+            font-size: 16px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 14px 24px;
+            font-size: 16px;
+            border-radius: 12px;
+            border: none;
+            background-color: #007aff;
+            color: white;
+        }
+        button:active {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>MP4 Downloader</h2>
+
+    <input type="text" id="videoUrl" placeholder="Paste direct .mp4 URL here">
+
+    <br>
+
+    <button onclick="downloadVideo()">Download MP4</button>
+
+    <script>
+        function downloadVideo() {
+            const url = document.getElementById("videoUrl").value.trim();
+
+            if (!url) {
+                alert("Please enter a valid MP4 URL.");
+                return;
+            }
+
+            if (!url.toLowerCase().endsWith(".mp4")) {
+                alert("URL must end with .mp4");
+                return;
+            }
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+
+</body>
+</html>
